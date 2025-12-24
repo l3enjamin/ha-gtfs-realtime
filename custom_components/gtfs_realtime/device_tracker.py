@@ -138,9 +138,10 @@ class GtfsVehicleTracker(TrackerEntity, CoordinatorEntity):
             vehicle_pos = self._get_vehicle_position()
             if vehicle_pos and hasattr(vehicle_pos, 'position'):
                 lat = vehicle_pos.position.latitude
+                lon = self.longitude
                 # Update position history
-                if lat is not None:
-                    self._update_position_history(lat, self.longitude)
+                if lat is not None and lon is not None:
+                    self._update_position_history(lat, lon)
                 return lat
         except (AttributeError, KeyError) as err:
             _LOGGER.debug(
@@ -226,17 +227,16 @@ class GtfsVehicleTracker(TrackerEntity, CoordinatorEntity):
         """Get vehicle position from coordinator data."""
         return self.coordinator.data.vehicle_positions.get(self._vehicle_id)
 
-    def _update_position_history(self, lat: float | None, lon: float | None) -> None:
+    def _update_position_history(self, lat: float, lon: float) -> None:
         """Update the position history deque."""
-        if lat is not None and lon is not None:
-            now = datetime.now()
-            # Only add if different from last position
-            if not self._position_history or (
-                self._position_history[-1][0] != lat
-                or self._position_history[-1][1] != lon
-            ):
-                self._position_history.append((lat, lon, now))
-                self._prune_old_positions()
+        now = datetime.now()
+        # Only add if different from last position
+        if not self._position_history or (
+            self._position_history[-1][0] != lat
+            or self._position_history[-1][1] != lon
+        ):
+            self._position_history.append((lat, lon, now))
+            self._prune_old_positions()
 
     def _prune_old_positions(self) -> None:
         """Remove positions older than the configured time window."""
