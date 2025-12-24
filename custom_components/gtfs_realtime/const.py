@@ -17,6 +17,12 @@ CONF_ARRIVAL_LIMIT = "arrival_limit"
 CONF_VERSION = 2
 CONF_MINOR_VERSION = 0
 
+# Vehicle tracking configuration
+CONF_VEHICLE_POSITION_URL = "vehicle_position_url"
+CONF_VEHICLE_POSITION_HISTORY_MINUTES = "vehicle_position_history_minutes"
+CONF_VEHICLE_POSITION_HISTORY_MINUTES_DEFAULT = 10
+CONF_TRACKED_ROUTES = "tracked_routes"
+
 # ERRORS
 CONF_SELECT_AT_LEAST_ONE_STOP_OR_ROUTE = "select_at_least_one_stop_or_route"
 
