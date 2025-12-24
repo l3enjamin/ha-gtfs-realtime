@@ -30,6 +30,14 @@ ROUTE_TEXT_COLOR = "route_text_color"
 HEADSIGN = "headsign"
 ROUTE_TYPE = "route_type"
 
+# Geographic and arrival attributes
+ATTR_LATITUDE = "latitude"
+ATTR_LONGITUDE = "longitude"
+ATTR_STOP_NAME = "stop_name"
+ATTR_NEXT_ARRIVALS = "next_arrivals"
+ATTR_ETA_SECONDS = "eta_seconds"
+ATTR_VEHICLE_ID = "vehicle_id"
+
 SSI_DB = "station_stop_info_db"
 TI_DB = "trip_info_db"
 CAL_DB = "calendar_db"
