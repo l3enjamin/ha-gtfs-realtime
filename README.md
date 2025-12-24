@@ -64,15 +64,79 @@ Simply displaying all entities for a "stop" device provides a train arrival boar
 
 ![sample dashboard](resources/sample.png)
 
+## Map Integration
+
+Stop sensors now include geographic coordinates (latitude/longitude) from GTFS static data, making them compatible with Home Assistant's map card and custom map cards like [`custom:map-card`](https://github.com/nathan-gs/ha-map-card).
+
+### Stop Sensor Structure
+
+Each stop creates a single sensor entity with:
+- **State**: Time in seconds until next arrival (displayed as minutes)
+- **Attributes**:
+  - `latitude`: Stop latitude from GTFS stops.txt
+  - `longitude`: Stop longitude from GTFS stops.txt
+  - `stop_name`: Human-readable stop name
+  - `next_arrivals`: Array of upcoming arrivals (up to configured limit)
+
+### Next Arrivals Format
+
+Each arrival in the `next_arrivals` attribute contains:
+```yaml
+- route_id: "99"          # Route identifier
+  headsign: "UBC"         # Trip destination
+  trip_id: "trip_123"     # Unique trip ID
+  eta_seconds: 180        # Seconds until arrival
+  route_color: "#0039A6"  # Route color (hex)
+  route_text_color: "#FFFFFF"
+  route_type: "BUS"       # TRAM, SUBWAY, RAIL, FERRY, BUS
+  vehicle_id: "1234"      # Vehicle ID (if available)
+```
+
+### Example: Map Card Configuration
+
+Using [`custom:map-card`](https://github.com/nathan-gs/ha-map-card) to display stops:
+
+```yaml
+type: custom:map-card
+focus_entity: sensor.stop_broadway_station
+zoom: 14
+entities:
+  - entity: sensor.stop_broadway_station
+    display: marker
+    size: 60
+    color: blue
+  - entity: sensor.stop_41st_avenue
+    display: marker
+    size: 60
+    color: blue
+```
+
+### Template Sensor for Next Arrival Display
+
+Create a template sensor to display formatted arrival information:
+
+```yaml
+template:
+  - sensor:
+      - name: "Broadway Station Next Bus"
+        state: >-
+          {% set arrivals = state_attr('sensor.stop_broadway_station', 'next_arrivals') %}
+          {% if arrivals and arrivals|length > 0 %}
+            {{ arrivals[0].route_id }} to {{ arrivals[0].headsign }} in {{ (arrivals[0].eta_seconds / 60)|round(0) }} min
+          {% else %}
+            No arrivals
+          {% endif %}
+```
+
 ## Sensors
 
-### Arrival Sensor
+### Stop Sensor
 
-The number of sensors can be specified during setup. By default this is 4.  
+One sensor is created per configured stop. The sensor state represents the time in seconds until the next arrival at that stop.
 
-Sensors will indicate the 1st, 2nd, 3rd, ... etc. arrivals for a given `stop_id` ordered by shortest time.  If no scheduled trips exist for a given arrival ordinal, it will take on the state "Unknown". That is to say, the first sensor will always have the shortest time to arrival, the second sensor will have the second shortest time to arrival, and so on. 
+The sensor includes geographic coordinates and a `next_arrivals` attribute containing detailed information about upcoming trips.
 
-Raw sensor data is provided in seconds. Minutes are the recommended unit.
+**Note**: This replaces the previous implementation which created multiple individual arrival sensors per stop.
 
 ### Alert Sensor
 
@@ -80,7 +144,7 @@ Alert sensors can be setup for a `route_id`. The [example/frontend.yaml](example
 
 ## Devices
 
-Each stop will collect the arrival sensors together as a device. For each static data collection, a device is also included for managing the schedule updates.
+Each stop will collect its sensor together as a device. For each static data collection, a device is also included for managing the schedule updates.
 
 ## Services
 
