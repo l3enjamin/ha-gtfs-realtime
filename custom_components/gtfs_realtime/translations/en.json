@@ -22,11 +22,15 @@
           "arrival_limit": "Arrival Limit",
           "gtfs_provider": "GTFS Provider Name",
           "route_ids": "Route ID",
-          "stop_ids": "Stop ID"
+          "stop_ids": "Stop ID",
+          "tracked_routes": "Tracked Routes (Vehicles)",
+          "vehicle_position_history_minutes": "Vehicle Position History (Minutes)"
         },
         "data_description": {
           "route_ids": "Route ID for a GTFS entity to receive service alerts.",
-          "stop_ids": "Stop ID for a GTFS entity to receive arrival data and service alerts"
+          "stop_ids": "Stop ID for a GTFS entity to receive arrival data and service alerts",
+          "tracked_routes": "Select routes to track real-time vehicle positions for on the map. Leave empty to track all available vehicles (may be memory intensive).",
+          "vehicle_position_history_minutes": "Number of minutes of vehicle position history to keep for path rendering on maps."
         },
         "description": "Configure GTFS parameters.",
         "sections": {
@@ -42,13 +46,15 @@
           "auth_header": "Authorization header (if required)",
           "gtfs_static_data": "GTFS Static Feeds (file or URL)",
           "route_icons": "Route Icons format URL",
-          "url_endpoints": "Feed URL"
+          "url_endpoints": "Feed URL",
+          "vehicle_position_url": "Vehicle Position Feed URL"
         },
         "data_description": {
           "auth_header": "Must be in the form '[Authorization Type]: [authorization string]'. For example, this could be 'X-Api-Key: [the api key]' or 'Authorization: apikey [the api key]'. Not all auth types are supported.",
           "gtfs_static_data": "GTFS static feed zip file. Include the URL(s) for static schedule data. Note this is required to merge trip and stop info with realtime data.",
           "route_icons": "URL to a route-icons provider containing an svg image file for a given route.  The string can contain up to 3 str.format() compatible formatters for [route_id], [route_color], and [route_text_color] respectively. If your provider gives these colors as HTML hex, you may need to add an html-escaped '#' preceeding the input.",
-          "url_endpoints": "Feed URLs for realtime GTFS Data"
+          "url_endpoints": "Feed URLs for realtime GTFS Data",
+          "vehicle_position_url": "URL for GTFS Realtime VehiclePosition feed (protobuf format). Required for map vehicle tracking."
         },
         "description": "This form will be pre-populated if you selected a provider in the previous step. Feeds you do not require can be removed to improve sensor update performance.\n\nNote that most datasets require at least one static data feed to provide schedule data.\n\n{disclaimer}"
       },
@@ -59,12 +65,18 @@
           "gtfs_provider": "GTFS Provider Name",
           "route_ids": "Route ID",
           "stop_ids": "Stop ID",
-          "url_endpoints": "Feed URL"
+          "url_endpoints": "Feed URL",
+          "tracked_routes": "Tracked Routes (Vehicles)",
+          "vehicle_position_url": "Vehicle Position Feed URL",
+          "vehicle_position_history_minutes": "Vehicle Position History (Minutes)"
         },
         "data_description": {
           "route_ids": "Route ID for a GTFS entity to receive service alerts.",
           "stop_ids": "Stop ID for a GTFS entity to receive arrival data and service alerts",
-          "url_endpoints": "Feed URLs for realtime GTFS Data"
+          "url_endpoints": "Feed URLs for realtime GTFS Data",
+          "tracked_routes": "Select routes to track real-time vehicle positions for on the map. Leave empty to track all available vehicles.",
+          "vehicle_position_url": "URL for GTFS Realtime VehiclePosition feed (protobuf format). Required for map vehicle tracking.",
+          "vehicle_position_history_minutes": "Number of minutes of vehicle position history to keep for path rendering on maps."
         },
         "description": "Reconfigure GTFS parameters for existing entry.",
         "sections": {
