@@ -42,7 +42,11 @@ from .const import (
     CONF_STATIC_SOURCES_UPDATE_FREQUENCY,
     CONF_STATIC_SOURCES_UPDATE_FREQUENCY_DEFAULT,
     CONF_STOP_IDS,
+    CONF_TRACKED_ROUTES,
     CONF_URL_ENDPOINTS,
+    CONF_VEHICLE_POSITION_HISTORY_MINUTES,
+    CONF_VEHICLE_POSITION_HISTORY_MINUTES_DEFAULT,
+    CONF_VEHICLE_POSITION_URL,
     CONF_VERSION,
     DOMAIN,
     FEEDS_URL,
@@ -172,6 +176,8 @@ class GtfsRealtimeConfigFlow(ConfigFlow, domain=DOMAIN):
         static_feeds: list[str] = list(
             feed_data.get("static_feeds", {"blank_user_entry": [""]}).values()
         )
+        vehicle_position_url: str = feed_data.get("vehicle_position_url", "")
+        
         route_icons: str = feed_data.get("route_icons", "")
         self.hub_config[CONF_GTFS_PROVIDER] = feed_data.get("name", "")
         self.hub_config[CONF_GTFS_PROVIDER_ID] = gtfs_provider_id
@@ -191,6 +197,15 @@ class GtfsRealtimeConfigFlow(ConfigFlow, domain=DOMAIN):
                         multiline=False,
                         type=TextSelectorType.URL,
                         multiple=True,
+                    )
+                ),
+                vol.Optional(
+                    CONF_VEHICLE_POSITION_URL,
+                    default=vehicle_position_url,
+                ): TextSelector(
+                    TextSelectorConfig(
+                        multiline=False,
+                        type=TextSelectorType.URL,
                     )
                 ),
                 vol.Optional(
@@ -269,6 +284,7 @@ class GtfsRealtimeConfigFlow(ConfigFlow, domain=DOMAIN):
         routes: list[SelectOptionDict],
         selected_stops: list[str] | None = None,
         selected_routes: list[str] | None = None,
+        selected_tracked_routes: list[str] | None = None,
     ) -> vol.Schema:
         """Populate the config schema with stops and routes to choose."""
         data_schema = vol.Schema(
@@ -299,8 +315,26 @@ class GtfsRealtimeConfigFlow(ConfigFlow, domain=DOMAIN):
                         multiple=True,
                     )
                 ),
-                vol.Required(CONF_ARRIVAL_LIMIT, default=4): NumberSelector(
+                vol.Optional(
+                    CONF_TRACKED_ROUTES,
+                    default=selected_tracked_routes or [],
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        options=routes,
+                        mode=SelectSelectorMode.DROPDOWN,
+                        multiple=True,
+                    )
+                ),
+                vol.Required(
+                    CONF_ARRIVAL_LIMIT, default=4
+                ): NumberSelector(
                     NumberSelectorConfig(min=1, step=1, mode=NumberSelectorMode.BOX)
+                ),
+                vol.Required(
+                    CONF_VEHICLE_POSITION_HISTORY_MINUTES,
+                    default=CONF_VEHICLE_POSITION_HISTORY_MINUTES_DEFAULT
+                ): NumberSelector(
+                    NumberSelectorConfig(min=1, max=60, step=1, mode=NumberSelectorMode.BOX)
                 ),
                 CONF_STATIC_SOURCES_UPDATE_FREQUENCY: section(
                     vol.Schema(
@@ -396,17 +430,18 @@ class GtfsRealtimeConfigFlow(ConfigFlow, domain=DOMAIN):
         data_schema = self._create_config_schema(
             stops=stops,
             routes=routes,
-            selected_stops=self.hub_config.get("stop_ids", []),
-            selected_routes=self.hub_config.get("route_ids", []),
+            selected_stops=self.hub_config.get(CONF_STOP_IDS, []),
+            selected_routes=self.hub_config.get(CONF_ROUTE_IDS, []),
+            selected_tracked_routes=self.hub_config.get(CONF_TRACKED_ROUTES, []),
         )
         data_schema = data_schema.extend(
             {
                 vol.Required(
                     CONF_URL_ENDPOINTS,
-                    default=self.hub_config.get("url_endpoints"),
+                    default=self.hub_config.get(CONF_URL_ENDPOINTS),
                     description=(
                         {"suggested_value": ["https://"]}
-                        if not self.hub_config.get("url_endpoints")
+                        if not self.hub_config.get(CONF_URL_ENDPOINTS)
                         else {}
                     ),
                 ): TextSelector(
@@ -414,6 +449,15 @@ class GtfsRealtimeConfigFlow(ConfigFlow, domain=DOMAIN):
                         multiline=False,
                         type=TextSelectorType.URL,
                         multiple=True,
+                    )
+                ),
+                vol.Optional(
+                    CONF_VEHICLE_POSITION_URL,
+                    default=self.hub_config.get(CONF_VEHICLE_POSITION_URL, ""),
+                ): TextSelector(
+                    TextSelectorConfig(
+                        multiline=False,
+                        type=TextSelectorType.URL,
                     )
                 )
             }
