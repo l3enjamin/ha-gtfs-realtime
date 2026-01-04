@@ -18,7 +18,11 @@ from .const import (
     CONF_ROUTE_ICONS,
     CONF_STATIC_SOURCES_UPDATE_FREQUENCY,
     CONF_STATIC_SOURCES_UPDATE_FREQUENCY_DEFAULT,
+    CONF_TRACKED_ROUTES,
     CONF_URL_ENDPOINTS,
+    CONF_VEHICLE_POSITION_HISTORY_MINUTES,
+    CONF_VEHICLE_POSITION_HISTORY_MINUTES_DEFAULT,
+    CONF_VEHICLE_POSITION_URL,
 )
 from .coordinator import GtfsRealtimeCoordinator
 from .helpers import header_dict_from_header_str
@@ -46,6 +50,14 @@ def create_gtfs_update_hub(
     )
     route_icons: str | None = config.get(CONF_ROUTE_ICONS)  # optional
     gtfs_provider: str | None = config.get(CONF_GTFS_PROVIDER)
+    
+    # Vehicle position configuration
+    vehicle_position_url: str | None = config.get(CONF_VEHICLE_POSITION_URL)
+    vehicle_position_history_minutes: int = config.get(
+        CONF_VEHICLE_POSITION_HISTORY_MINUTES,
+        CONF_VEHICLE_POSITION_HISTORY_MINUTES_DEFAULT
+    )
+    tracked_routes: set[str] = set(config.get(CONF_TRACKED_ROUTES, []))
 
     static_timedelta = {
         uri: timedelta(**timedelta_dict)
@@ -62,6 +74,9 @@ def create_gtfs_update_hub(
         static_timedelta=static_timedelta,
         route_icons=route_icons,
         gtfs_provider=gtfs_provider,
+        vehicle_position_url=vehicle_position_url,
+        vehicle_position_history_minutes=vehicle_position_history_minutes,
+        tracked_routes=tracked_routes,
         headers=headers,
     )
 
@@ -73,13 +88,35 @@ async def async_setup_entry(
     coordinator: GtfsRealtimeCoordinator = create_gtfs_update_hub(hass, entry.data)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
+    
+    # Setup base platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    
+    # Setup device tracker platform if vehicle position URL is configured
+    if coordinator.vehicle_position_url:
+        await hass.config_entries.async_forward_entry_setups(entry, [Platform.DEVICE_TRACKER])
+        _LOGGER.info(
+            "Vehicle tracking enabled for %s",
+            coordinator.gtfs_provider or "GTFS provider"
+        )
+    else:
+        _LOGGER.debug(
+            "Vehicle position URL not configured. Device trackers will not be created."
+        )
+    
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload GTFS config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    platforms_to_unload = list(PLATFORMS)
+    
+    # Add device tracker if it was loaded
+    coordinator: GtfsRealtimeCoordinator = entry.runtime_data
+    if coordinator.vehicle_position_url:
+        platforms_to_unload.append(Platform.DEVICE_TRACKER)
+    
+    return await hass.config_entries.async_unload_platforms(entry, platforms_to_unload)
 
 
 async def async_migrate_entry(
