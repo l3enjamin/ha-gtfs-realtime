@@ -109,7 +109,7 @@ class GtfsVehicleTracker(TrackerEntity, CoordinatorEntity):
         # Position history for path drawing (configurable time window)
         history_minutes = coordinator.vehicle_position_history_minutes
         self._position_history: deque[tuple[float, float, datetime]] = deque(
-            maxlen=history_minutes * 2  # Assuming ~30s updates = 2 per minute
+            maxlen=int(history_minutes * 2)  # Assuming ~30s updates = 2 per minute
         )
 
     @property

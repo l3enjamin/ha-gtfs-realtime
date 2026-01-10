@@ -53,10 +53,10 @@ def create_gtfs_update_hub(
     
     # Vehicle position configuration
     vehicle_position_url: str | None = config.get(CONF_VEHICLE_POSITION_URL)
-    vehicle_position_history_minutes: int = config.get(
+    vehicle_position_history_minutes: int = int(config.get(
         CONF_VEHICLE_POSITION_HISTORY_MINUTES,
         CONF_VEHICLE_POSITION_HISTORY_MINUTES_DEFAULT
-    )
+    ))
     tracked_routes: set[str] = set(config.get(CONF_TRACKED_ROUTES, []))
 
     static_timedelta = {
